@@ -1,0 +1,212 @@
+import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Queue;
+import java.util.Stack;
+import java.util.Scanner;
+import java.util.Random;
+
+public class FordFulkerson{
+    int n;
+    int parent[];
+    int graph_main[][];
+    
+    public FordFulkerson(int n, int graph_main[][]){
+        this.n = n;
+        this.graph_main = graph_main;
+        this.parent = new int[n];
+    }
+    public static int random_generator(ArrayList<Integer> neighbour) {
+        int rnd = new Random().nextInt(neighbour.size());
+        return rnd;
+    }
+    public boolean dfs(int source, int destination, int graph[][]){
+        boolean visited[] = new boolean[n];
+        Stack<Integer> stack = new Stack<Integer>();
+        for(int i=0;i<n;i++){
+            visited[i]=false;
+            parent[i]=-1;
+        }
+        stack.push(source);
+        while(!stack.isEmpty()){
+            int current = stack.pop();
+            if(!visited[current]){
+                visited[current]=true;
+                for(int i=n-1;i>=0;i--){
+                    if(graph[current][i]>0 && !visited[i]){
+                        parent[i]=current;
+                        stack.push(i);
+                    }
+                }
+            }
+        }
+        return visited[destination];
+    }
+    public boolean bfs(int source, int destination, int graph[][]){
+        boolean visited[] = new boolean[n];
+        Queue<Integer> queue = new LinkedList<Integer>();
+        for(int i=0;i<n;i++){
+            visited[i]=false;
+            parent[i]=-1;
+        }
+        queue.add(source);
+        visited[source]=true;
+        while(!queue.isEmpty()){
+            int current = queue.remove();
+            for(int i=0;i<n;i++){
+                if(graph[current][i]>0 && !visited[i]){
+                    queue.add(i);
+                    parent[i]=current;
+                    visited[i]=true;
+                }
+            }
+        }
+        return visited[destination];
+    }
+    public boolean random(int source, int destination, int graph[][]){
+        boolean visited[] = new boolean[n];
+        Stack<Integer> stack = new Stack<Integer>();
+        for(int i=0;i<n;i++){
+            visited[i]=false;
+            parent[i]=-1;
+        }
+        stack.push(source);
+        while(!stack.isEmpty()){
+            int current = stack.pop();
+            if(!visited[current]){
+                visited[current]=true;
+                ArrayList<Integer> neighbour = new ArrayList<Integer>();
+                for(int i=n-1;i>=0;i--){
+                    if(graph[current][i]>0 && !visited[i]){
+                        neighbour.add(i);
+                    }
+                }
+                while(!neighbour.isEmpty()){
+                    int x = random_generator(neighbour);
+                    int y = neighbour.remove(x);
+                    stack.push(y);
+                    parent[y]=current;
+                }
+            }
+        }
+        return visited[destination];
+    }
+    public int fordFulkerson_random(int source, int sink){
+        int max_flow = 0;
+        int residual_graph[][] = new int[n][n];
+        for(int i=0;i<n;i++){
+            for(int j=0;j<n;j++){
+                residual_graph[i][j] = graph_main[i][j];
+            }
+        }
+        while(random(source,sink,residual_graph)){
+            int min_flow = Integer.MAX_VALUE;
+            for(int s=sink;s!=source;s=parent[s]){
+                int p = parent[s];
+                min_flow = Math.min(min_flow,residual_graph[p][s]);
+            }
+            for(int s=sink;s!=source;s=parent[s]){
+                int p = parent[s];
+                residual_graph[p][s]-=min_flow;
+                residual_graph[s][p]+=min_flow;
+            }
+            max_flow += min_flow;
+        }
+        return max_flow;
+    }
+    public int fordFulkerson_dfs(int source, int sink){
+        int max_flow = 0;
+        int residual_graph[][] = new int[n][n];
+        for(int i=0;i<n;i++){
+            for(int j=0;j<n;j++){
+                residual_graph[i][j] = graph_main[i][j];
+            }
+        }
+        while(dfs(source,sink,residual_graph)){
+            int min_flow = Integer.MAX_VALUE;
+            for(int s=sink;s!=source;s=parent[s]){
+                int p = parent[s];
+                min_flow = Math.min(min_flow,residual_graph[p][s]);
+            }
+            for(int s=sink;s!=source;s=parent[s]){
+                int p = parent[s];
+                residual_graph[p][s]-=min_flow;
+                residual_graph[s][p]+=min_flow;
+            }
+            max_flow += min_flow;
+        }
+        return max_flow;
+    }
+    public int fordFulkerson_bfs(int source, int sink){
+        int max_flow = 0;
+        int residual_graph[][] = new int[n][n];
+        for(int i=0;i<n;i++){
+            for(int j=0;j<n;j++){
+                residual_graph[i][j] = graph_main[i][j];
+            }
+        }
+        while(bfs(source,sink,residual_graph)){
+            int min_flow = Integer.MAX_VALUE;
+            for(int s=sink;s!=source;s=parent[s]){
+                int p = parent[s];
+                min_flow = Math.min(min_flow,residual_graph[p][s]);
+            }
+            for(int s=sink;s!=source;s=parent[s]){
+                int p = parent[s];
+                residual_graph[p][s]-=min_flow;
+                residual_graph[s][p]+=min_flow;
+            }
+            max_flow += min_flow;
+        }
+        return max_flow;
+    }
+    
+    public static void main(String args[]){
+        Scanner sc = new Scanner(System.in);
+        int n = 6;
+        int graph[][] = {
+            {0, 16, 13, 0, 0, 0},
+            {0, 0,  10, 12, 0, 0},
+            {0, 4, 0, 0, 14, 0},
+            {0, 0, 9, 0, 0, 20},
+            {0, 0, 0, 7, 0, 4},
+            {0, 0, 0, 0, 0, 0},
+        };
+        int source = 0;
+        int sink = 5;
+        FordFulkerson ff = new FordFulkerson(n,graph);
+        
+        long startTime,endTime,seconds_random,seconds_bfs,seconds_dfs;
+        int maxFlow_random,maxFlow_bfs,maxFlow_dfs;
+        long totalseconds_random=0,totalseconds_bfs=0,totalseconds_dfs=0;
+        long average_random,average_bfs,average_dfs;
+	int obs=10000;
+        
+        for(int i=0;i<obs;i++){
+            startTime = System.nanoTime();
+            maxFlow_random = ff.fordFulkerson_random(source, sink);
+            endTime = System.nanoTime();
+            seconds_random = (endTime - startTime);
+            totalseconds_random+=seconds_random;
+            
+            startTime = System.nanoTime();
+            maxFlow_bfs = ff.fordFulkerson_bfs(source, sink);
+            endTime = System.nanoTime();
+            seconds_bfs = (endTime - startTime);
+            totalseconds_bfs+=seconds_bfs;
+            
+            startTime = System.nanoTime();
+            maxFlow_dfs = ff.fordFulkerson_dfs(source, sink);
+            endTime = System.nanoTime();
+            seconds_dfs = (endTime - startTime);
+            totalseconds_dfs+=seconds_dfs;
+        }
+        average_random=totalseconds_random/obs;
+        average_bfs=totalseconds_bfs/obs;
+        average_dfs=totalseconds_dfs/obs;
+        
+        
+        System.out.println("Basic:\t"+average_random+" nanoseconds");
+        System.out.println("BFS:\t"+average_bfs+" nanoseconds");
+        System.out.println("DFS:\t"+average_dfs+" nanoseconds");
+    }
+}
